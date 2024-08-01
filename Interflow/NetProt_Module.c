@@ -5,6 +5,7 @@
 #include "RTC.h"
 #include "AT24C0256.h"
 #include "MQTT_JSON.h"
+#include "WT_MQTT_JSON.h"
 #include "Gpio.h"
 #include "main.h"
 #include "StrLib.h"
@@ -156,7 +157,7 @@ void MOTT_Net_Task(void) {
             if (isMQTTLinkOnleng()) {
                 Now_NetDevParameter.NowNetOnlineFlag = true; // 设备已在线
                 Now_NetDevParameter.ReBootCount = 0;         // 连接成功，重器计数清零
-                JSON_Send_GW_Infor((Now_NetDevParameter.ReBootCount > 0 ? true : false));
+                // JSON_Send_GW_Infor((Now_NetDevParameter.ReBootCount > 0 ? true : false));
                 printf("Now the gateway is online\r\n");
             }
             Now_NetDevParameter.ReBootCount = 0; // 复位重启计数器
@@ -167,16 +168,29 @@ void MOTT_Net_Task(void) {
             Now_NetDevParameter.MQTT_NET_Receive_checkTime = BuffcheckTime; // 10*BuffcheckTime ms check 一次，后获取数据
             if (copyDataForUART()) { // 从 UART0Ddata 获取数据
                 char * AddrStart = NULL;
-                if (NULL == (AddrStart = strstr(Now_NetDevParameter.NetDataBuff, "{\"gw\":"))) {
+                if (strstr(Now_NetDevParameter.NetDataBuff, "{\"gw\":") != NULL) {
+                    if (NULL == (AddrStart = strstr(Now_NetDevParameter.NetDataBuff, "{\"gw\":"))) {
+                        ClearNetDataBuff();
+                        return;
+                    }
+                    if (NULL == strstr(AddrStart, "}}")) {
+                        return;
+                    }
+                    printf("Received Command of HuiYun\r\n");
+                    MQTT_JSON_Analysis(AddrStart); // 解析收到的数据，找到 josn 数据
                     ClearNetDataBuff();
-                    return;
+                } else if (strstr(Now_NetDevParameter.NetDataBuff, "[{") != NULL) {
+                    if (NULL == (AddrStart = strstr(Now_NetDevParameter.NetDataBuff, "[{"))) {
+                        ClearNetDataBuff();
+                        return;
+                    }
+                    if (NULL == strstr(AddrStart, "}]")) {
+                        return;
+                    }
+                    printf("Received Command of HuiYun\r\n");
+                    WT_MQTT_JSON_Analysis(AddrStart); // 解析收到的数据，找到 josn 数据
+                    ClearNetDataBuff();
                 }
-                if (NULL == strstr(AddrStart, "}}")) {
-                    return;
-                }
-                printf("Received Command of HuiYun\r\n");
-                MQTT_JSON_Analysis(AddrStart);  // 解析收到的数据，找到 josn 数据
-                ClearNetDataBuff();
             }
         }
     }

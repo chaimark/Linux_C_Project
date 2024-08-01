@@ -760,10 +760,10 @@ void MF_Config_Init(void) {
     MF_RTC_1Second_Init();
     MF_RTC_1Second_Interrupt_Init();
     MF_NVIC_RTC_Init();
-	  /* Initial BSTIM32 */
+    /* Initial BSTIM32 */
     MF_BSTIM32_10mS_Init();
     MF_BSTIM32_10mS_Interrupt_Init();
-	  MF_NVIC_BSTIM_Init();
+    MF_NVIC_BSTIM_Init();
     MF_GPTIM0_TimerBase_100mS_Init();
     MF_NVIC_GPTIM0_Init();
     MF_GPTIM1_TimerBase_100mS_Init();
@@ -792,3 +792,4 @@ void assert_failed(uint8_t * file, uint32_t line) {
 #endif /* USE_FULL_ASSERT */
 
 /*************************(C) COPYRIGHT Fudan Microelectronics **** END OF FILE*************************/
+

@@ -598,7 +598,7 @@ void UART5_IRQHandler(void) {
         tmp = FL_UART_ReadRXBuff(UART5);
         uart_receive_u8(&UART5Ddata, tmp);
     }
-    if(IsAcceptWIFIData((char *)UART5Ddata.RxBuf, (int)UART5Ddata.RxLen)) {
+    if (IsAcceptWIFIData((char *)UART5Ddata.RxBuf, (int)UART5Ddata.RxLen)) {
         if (WIFI_TASK()) {
             Clear_UART5_Data();
         }

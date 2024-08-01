@@ -1,4 +1,5 @@
 #include "MQTT_JSON.h"
+#include "WT_MQTT_JSON.h"
 #include "NumberBaseLib.h"
 #include "StrLib.h"
 #include "NetProt_Module.h"
@@ -50,6 +51,8 @@ JSON_MATCHING_S json_matching = {
     {"\"upgrades\"", 0xff},
     {"\"program_ver\"", 0xff},
     {"\"program_now_addr\"", 0},
+    {"\"WTporjectId\"", 0xff},
+    {"\"WTproductkey\"", 0xff},
 };
 
 METERID_T Main_MeterId[20] = {0}; // 主表仪表号码缓存  20只
@@ -242,11 +245,11 @@ void JSON_Send_GW_Infor(bool hasRST) {
     // 版本号
     sprintf(temp_char, "V%d.%d", SOFT_VERSION / 10, SOFT_VERSION % 10);
     JSON_Send_Add_Item(&json_matching.GW_Ver, temp_char);
-    JSON_Send_Add_Item(&json_matching.has_rst, &hasRST);				// 是否重启
+    JSON_Send_Add_Item(&json_matching.has_rst, &hasRST);                // 是否重启
     JSON_Send_Add_Item(&json_matching.MBUS_mV, &Current_MBUS_MV_Value); // MBUS电压
     JSON_Send_Add_Item(&json_matching.MBUS_mA, &Current_MBUS_MA_Value); // MBUS电流
-    temp = AT24CXX_Manager.Save_Working_Mode;											// 端口 要完善
-    JSON_Send_Add_Item(&json_matching.GW_model, &temp);					// 网关当前开启的端口  MBUS及485区别
+    temp = AT24CXX_Manager.Save_Working_Mode;                           // 端口 要完善
+    JSON_Send_Add_Item(&json_matching.GW_model, &temp);                 // 网关当前开启的端口  MBUS及485区别
     temp = 0;
     temp = EEprom_Byte1Read(EEPROM_MAIN_METER_TOTAL_ADDR);
     JSON_Send_Add_Item(&json_matching.main_meter_total, &temp);
@@ -301,7 +304,7 @@ static void JSON_Send_Read_Main_Meter_Id(unsigned char id) {
             Main_MeterId[i].meterIds[j] = EEprom_Byte1Read(EEPROM_MAIN_METER_START_ADDR + i * 60 + j);
     }
     sprintf(temp_char, "%01x%02x%02x%02x%02x%02x%02x", Main_MeterId[0].meterIds[0], Main_MeterId[0].meterIds[1], Main_MeterId[0].meterIds[2], Main_MeterId[0].meterIds[3], Main_MeterId[0].meterIds[4], Main_MeterId[0].meterIds[5], Main_MeterId[0].meterIds[6]);
-    if ((Main_MeterId[0].meterIds[0] == 0x00) || (Main_MeterId[0].meterIds[0] == 0xFF)) {								// 无仪表号码
+    if ((Main_MeterId[0].meterIds[0] == 0x00) || (Main_MeterId[0].meterIds[0] == 0xFF)) {   // 无仪表号码
         JSON_Send_Add_Stat(id, 31); // 失败
     } else {
         JSON_Send_Add_Item_Func(&json_matching.main_meter_id, temp_char);
@@ -340,7 +343,7 @@ static void JSON_Send_Read_Copy_Meter_Id(unsigned char id, unsigned char num) {
             Copy_MeterId[i].meterIds[j] = EEprom_Byte1Read(EEPROM_COPY_METER_START_ADDR + (num - 1) * 1200 + i * 60 + j);
     }
     sprintf(temp_char, "%01x%02x%02x%02x%02x%02x%02x", Copy_MeterId[0].meterIds[0], Copy_MeterId[0].meterIds[1], Copy_MeterId[0].meterIds[2], Copy_MeterId[0].meterIds[3], Copy_MeterId[0].meterIds[4], Copy_MeterId[0].meterIds[5], Copy_MeterId[0].meterIds[6]);
-    if ((Copy_MeterId[0].meterIds[0] == 0x00) || (Copy_MeterId[0].meterIds[0] == 0xFF)) {								// 无仪表号码
+    if ((Copy_MeterId[0].meterIds[0] == 0x00) || (Copy_MeterId[0].meterIds[0] == 0xFF)) {   // 无仪表号码
         JSON_Send_Add_Stat(id, 41); // 失败
     } else {
         JSON_Send_Add_Item_Func(&json_matching.copy_meter_id, temp_char);
@@ -396,15 +399,20 @@ static void JSON_Send_Read_MQTT_Parameter(unsigned char id) {
 
 // 上报仪表数据
 void JSON_Send_Main_Copy_Meter_Data(unsigned char id, unsigned char * addr, unsigned char * data, unsigned char lentgh) {
-    char temp_char[270] = {0};
-    JSON_Send_Add_Begin(id);
-    sprintf(temp_char, "%01x%02x%02x%02x%02x%02x%02x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6]);
-    JSON_Send_Add_Item(&json_matching.meter_id, temp_char);
-    strcat(JSON_TTL_Buff, "\"meter_data\":[\"");
-    HEX2ToASCII((char *)data, lentgh, temp_char, (lentgh * 2));
-    strcat(JSON_TTL_Buff, temp_char);
-    strcat(JSON_TTL_Buff, "\",");
-    JSON_Send_Add_End_Func();
+    if (WT_MQTT_FLAG == 1) {
+        char temp_char[270] = {0};
+        JSON_Send_Add_Begin(id);
+        sprintf(temp_char, "%01x%02x%02x%02x%02x%02x%02x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6]);
+        JSON_Send_Add_Item(&json_matching.meter_id, temp_char);
+        strcat(JSON_TTL_Buff, "\"meter_data\":[\"");
+        HEX2ToASCII((char *)data, lentgh, temp_char, (lentgh * 2));
+        strcat(JSON_TTL_Buff, temp_char);
+        strcat(JSON_TTL_Buff, "\",");
+        JSON_Send_Add_End_Func();
+    } else {
+        memset(JSON_TTL_Buff, 0, UART0_MAX);
+        WT_JSON_Send_Main_Copy_Meter_Data(JSON_TTL_Buff, data, lentgh);
+    }
     if (UP_Mode_NET_ON == 1) {
         sendDataByNetProt((unsigned char *)JSON_TTL_Buff, strlen(JSON_TTL_Buff));
     } else {
@@ -414,14 +422,19 @@ void JSON_Send_Main_Copy_Meter_Data(unsigned char id, unsigned char * addr, unsi
 
 // 透传数据上报
 void JSON_Send_Immediately_Main_Copy_Meter_Data(unsigned char id, unsigned char port_num, unsigned char * data, unsigned char lentgh) {
-    char temp_char[240] = {0};
-    JSON_Send_Add_Begin(id);
-    JSON_Send_Add_Item(&json_matching.transparent_port, &port_num);
-    strcat(JSON_TTL_Buff, "\"meter_data\":[\"");
-    HEX2ToASCII((char *)data, lentgh, temp_char, (lentgh * 2));
-    strcat(JSON_TTL_Buff, temp_char);
-    strcat(JSON_TTL_Buff, "\",");
-    JSON_Send_Add_End_Func();
+    if (WT_MQTT_FLAG == 1) {
+        char temp_char[240] = {0};
+        JSON_Send_Add_Begin(id);
+        JSON_Send_Add_Item(&json_matching.transparent_port, &port_num);
+        strcat(JSON_TTL_Buff, "\"meter_data\":[\"");
+        HEX2ToASCII((char *)data, lentgh, temp_char, (lentgh * 2));
+        strcat(JSON_TTL_Buff, temp_char);
+        strcat(JSON_TTL_Buff, "\",");
+        JSON_Send_Add_End_Func();
+    } else {
+        memset(JSON_TTL_Buff, 0, UART0_MAX);
+        WT_JSON_Send_Immediately_Main_Copy_Meter_Data(JSON_TTL_Buff, data, lentgh);
+    }
     if (UP_Mode_NET_ON == 1) {
         sendDataByNetProt((unsigned char *)JSON_TTL_Buff, strlen(JSON_TTL_Buff));
     } else {
@@ -445,8 +458,9 @@ void JSON_GetDataForUpgradeProgram(unsigned char id) {
     //     MQTT_4G_Send_Protocol_To_TTL(JSON_TTL_Buff, strlen(JSON_TTL_Buff));
     // }
 }
-
+// {"gw":{"msg_id":80,"msg_gw_pr":0,"gw_id":"02345678903"},"data":{"porjectId":"AAAAA","productkey":"BBBBB"}} 
 int MQTT_JSON_Analysis(char * data) {
+    WT_MQTT_FLAG = 1;   // HY 的指令
     char * p;
     unsigned short int len;
     char temp_char[12] = {0};
@@ -606,8 +620,8 @@ int MQTT_JSON_Analysis(char * data) {
             } else {
                 int Len = JSON_GW_SIZE;
                 JSON_Send_Add_Stat(id, 2);
-#warning "测试"
-                copyString((char *)change_char, (char *)p, ARR_SIZE(change_char), Len);
+                #warning "测试"
+                    copyString((char *)change_char, (char *)p, ARR_SIZE(change_char), Len);
                 swapStr((char *)change_char, Len);
                 if ((Len % 2) != 0) {
                     change_char[strlen((char *)change_char)] = '0';
@@ -668,6 +682,9 @@ int MQTT_JSON_Analysis(char * data) {
                     imm_Read.immediately_Reading_Current_Count = 0;
                     imm_Read.immediately_TX_Len = strlen(p);
                     char * P_end = myStrstr(p, "\"", imm_Read.immediately_TX_Len);
+                    if (P_end == NULL) {
+                        return 1;
+                    }
                     imm_Read.immediately_TX_Len = (P_end - p) / 2;
                     ASCIIToHEX2((char *)p, len, (char *)imm_Read.immediately_TXBuffer, imm_Read.immediately_TX_Len);
                     if ((JSON_Find_Int(p, &json_matching.transparent_count, &temp1)) == NULL)
@@ -721,10 +738,24 @@ int MQTT_JSON_Analysis(char * data) {
             break;
         case 70: // 遗言
             break;
-        case 80:
+        case 80:    //{"gw": {"msg_id": 80,"msg_gw_pr": 0,"gw_id": "02345678903","data": {"porjectId": "AAAAA","productkey": "BBBBB"}}
+            if ((p = JSON_Find_Node(p, &json_matching.WTporjectId, &len)) == NULL) {
+                JSON_Send_Add_Stat(id, 601);
+                return 0;
+            }
+            memset(AT24CXX_Manager.porjectId, 0, ARR_SIZE(AT24CXX_Manager.porjectId)); // AT24CXX_Manager.porjectId
+            memcpy(AT24CXX_Manager.porjectId, p, len);
+            if ((p = JSON_Find_Node(p, &json_matching.WTproductkey, &len)) == NULL) {
+                JSON_Send_Add_Stat(id, 601);
+                return 0;
+            }
+            memset(AT24CXX_Manager.productkey, 0, ARR_SIZE(AT24CXX_Manager.productkey)); // AT24CXX_Manager.productkey
+            memcpy(AT24CXX_Manager.productkey, p, len);
+            EEprom_JSON_Write((unsigned char *)AT24CXX_Manager.NET_Local_GATEWAY, sizeof(AT24CXX_Manager.NET_Local_GATEWAY));
             break;
         default:
             break;
     }
+    WT_MQTT_FLAG = 0;   // 改回 WT 的指令
     return 1;
 }

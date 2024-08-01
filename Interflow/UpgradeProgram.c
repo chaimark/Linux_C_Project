@@ -3,7 +3,7 @@
 #include "UpgradeProgram.h"
 // #include <stdbool.h>
 // #include "StrLib.h"
-// #include "NumberBaseLic.h"
+// #include "NumberBaseLib.h"
 // #include "main.h"
 
 // UpParam_Infomation Up_Param_Infomation;
@@ -71,7 +71,7 @@
 //         DataLinelen = ASCIIToHEX2(NodeStr, strlen(NodeStr), DataLine, ARR_SIZE(DataLine));// 转为hex
 //         DataLineCsNum = UpData_CheckSum((unsigned char *)NodeStr, len);// 检查CS校验
 //         if (DataLineCsNum != DataLine[DataLinelen - 1]) {
-//             return -1;  // CHECKSUM-8 LRC 校验错误 
+//             return -1;  // CHECKSUM-8 LRC 校验错误
 //         }
 
 //         // 行结构正确，判断数据类型
@@ -108,4 +108,5 @@
 
 //     return 0;
 // }
+
 

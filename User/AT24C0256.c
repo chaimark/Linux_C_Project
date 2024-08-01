@@ -279,6 +279,7 @@ void EEprom_Byte4Write(unsigned long int addr, unsigned long int data) {
     EEprom_Byte1Write(addr, i);
 }
 
+int WT_MQTT_FLAG = 0;
 // public
 AT24CXX_MANAGER_T AT24CXX_Manager = {
     0xB2,								  // 初始化标志
@@ -291,15 +292,17 @@ AT24CXX_MANAGER_T AT24CXX_Manager = {
     "192.168.0.105",
     "255.255.255.0",
     "192.168.0.1",
-    "hysmartmetering.com",
-    1883,
+    "8.137.63.223",
+    1893,
     1440,
-    10, // 主表周期
-    60, // 副表周期
+    1, // 主表周期
+    2, // 副表周期
     1,
-    0x89,
+    0x49,
     false,
     false,
+    "weitai",
+    "yasite",
 };
 
 // 初始化参数
