@@ -1,5 +1,5 @@
 #include "4G_Module.h"
-#include "WT_MQTT_JSON.h"
+
 
 // *********************************************************************************
 char EC200T_VER[30] = {0};
@@ -10,37 +10,38 @@ char EC20T_CSQ[5] = {0};
 int EC20T_RSSI = 0;
 int EC20T_SINR = 0;
 
+
 // 一些打印
 // 打开网络
 static const char * QMTOPEN_Str[] = {
-    "sucess",      // 0 打开网络成功
+    "sucess",	   // 0 打开网络成功
     "err param ",  // 1 参数错误
-    "err id",      // 2 MQTT 标识符被占用
-    "err PDP",     // 3 激活 PDP 失败
-    "err url",     // 4 域名解析失败
+    "err id",	   // 2 MQTT 标识符被占用
+    "err PDP",	   // 3 激活 PDP 失败
+    "err url",	   // 4 域名解析失败
     "err disconn", // 5 网络断开导致错误
 };
 
 // 连接服务器
 static const char * QMTOPEN_CONN_Code[] = {
-    "sucess",    // 0 接受连接
-    "err Ver",   // 1 拒绝连接： 不接受的协议版本
-    "err Id",    // 2 拒绝连接：标识符被拒绝
-    "err Host",  // 3 拒绝连接：服务器不可用
+    "sucess",	 // 0 接受连接
+    "err Ver",	 // 1 拒绝连接： 不接受的协议版本
+    "err Id",	 // 2 拒绝连接：标识符被拒绝
+    "err Host",	 // 3 拒绝连接：服务器不可用
     "err Login", // 4 拒绝连接： 错误的用户名或密码
     "err unLic", // 5 拒绝连接：未授权
 };
 
 // status
 static const char * QMTSTAT_Code[] = {
-    "sucess",         // 0
-    "err open",       // 1        | 连接被服务器断开或者重置
-    "err ping",       // 2        | 发送 PINGREQ 包超时或者失败
-    "err conn",       // 3        | 发送 CONNECT 包超时或者失败
-    "err ack",        // 4        | 接收 CONNACK 包超时或者失败
-    "rec disconn",    // 5        | 客户端向服务器发送 DISCONNECT 包
-    "err send",       // 6        | 因为发送数据包总是失败，
-    "err Host",       // 7        | 链路不工作或者服务器不可用
+    "sucess",		  // 0
+    "err open",		  // 1        | 连接被服务器断开或者重置
+    "err ping",		  // 2        | 发送 PINGREQ 包超时或者失败
+    "err conn",		  // 3        | 发送 CONNECT 包超时或者失败
+    "err ack",		  // 4        | 接收 CONNACK 包超时或者失败
+    "rec disconn",	  // 5        | 客户端向服务器发送 DISCONNECT 包
+    "err send",		  // 6        | 因为发送数据包总是失败，
+    "err Host",		  // 7        | 链路不工作或者服务器不可用
     "client disconn", // 8        | 客户端主动断开 MQTT 连接
     // 9~255    | 留作将来使用
 };
@@ -49,14 +50,14 @@ static const char * QMTSTAT_Code[] = {
 // private ***************************************************************************
 typedef bool (*MQTT_4G_CMD)(char * data);
 typedef struct MQTT_4G_PROCESS_S {
-    const char * cmd;                  // 命令
-    const char * sucess;               // 成功返回
+    const char * cmd;				  // 命令
+    const char * sucess;				  // 成功返回
     const unsigned int overtime_10ms; // 超时时间
-    const int8_t overtime_num;        // 超时重试次数
-    const int8_t sucess_add;          // 成功后前进步数, 0跳出AT模式
-    MQTT_4G_CMD fun_cmd;              // 自定义命令
-    MQTT_4G_CMD fun_sucess;           // 等待结果
-    char * read;                       // 读数据的缓存
+    const int8_t overtime_num;		  // 超时重试次数
+    const int8_t sucess_add;		  // 成功后前进步数, 0跳出AT模式
+    MQTT_4G_CMD fun_cmd;			  // 自定义命令
+    MQTT_4G_CMD fun_sucess;			  // 等待结果
+    char * read;						  // 读数据的缓存
 } MQTT_4G_PROCESS_T;
 
 // 发送缓存
@@ -70,21 +71,21 @@ unsigned char MQTT_4G_Connect_Flage = 0; // 连接状态：0：断开，1:连接
 unsigned char MQTT_4G_History_Confirm = 0;
 
 // 发送函数
-// static unsigned char MQTT_4G_Has_RST = 1;
+static unsigned char MQTT_4G_Has_RST = 1;
 // 主机确认标志
 static int MQTT_4G_Process_10mS_Delay = 0; // 用于控制AT指令模式下，指令超时
 static int MQTT_4G_History_10mS_Delay = 0; // 传输历史数据超时时间
 static unsigned char MQTT_4G_History_Repeat_Count = 0;
-static unsigned int MQTT_4G_Receive_10mS_Delay = 0;       // 20ms 一次执行此任务
-static unsigned int MQTT_4G_Read_Rssi_10mS_Delay = 0;     // 在透传模式下1h一次读取信号强度
-static unsigned int MQTT_4G_Read_Cclk_10mS_Delay = 0;     // 1h一次读取系统时钟
-static unsigned int MQTT_4G_Heart_Inv_Delay = 0;          // 心跳间隔
-static unsigned int MQTT_4G_Connect_10mS_Delay = 0;       // 用于确定当前是否连接延时。 CONNECT 后保持5s, 才算连接上
-static unsigned int MQTT_4G_OverTime_10mS_Delay = 0;      // 帧超时
+static unsigned int MQTT_4G_Receive_10mS_Delay = 0;		  // 20ms 一次执行此任务
+static unsigned int MQTT_4G_Read_Rssi_10mS_Delay = 0;	  // 在透传模式下1h一次读取信号强度
+static unsigned int MQTT_4G_Read_Cclk_10mS_Delay = 0;	  // 1h一次读取系统时钟
+static unsigned int MQTT_4G_Heart_Inv_Delay = 0;		  // 心跳间隔
+static unsigned int MQTT_4G_Connect_10mS_Delay = 0;		  // 用于确定当前是否连接延时。 CONNECT 后保持5s, 才算连接上
+static unsigned int MQTT_4G_OverTime_10mS_Delay = 0;	  // 帧超时
 static unsigned int MQTT_4G_Send_OverTime_10mS_Delay = 0; // 发送超时
-static unsigned char MQTT_4G_Process_Index = 0xff;        // 当前 步骤
-static unsigned char MQTT_4G_Process_Repeat_Count = 0;    // 重试次数
-static unsigned char MQTT_4G_Process_Reboot_Count = 0;    // 重启次数
+static unsigned char MQTT_4G_Process_Index = 0xff;		  // 当前 步骤
+static unsigned char MQTT_4G_Process_Repeat_Count = 0;	  // 重试次数
+static unsigned char MQTT_4G_Process_Reboot_Count = 0;	  // 重启次数
 
 static bool MQTT_4G_Net_Status(char * data);
 static bool MQTT_4G_Get_RSSI(char * data);
@@ -102,26 +103,26 @@ static void MQTT_4G_Connect_Task(void);
 // 没有 cmd  通过  fun_cmd 返回 cmd命令
 // 没有sucess,通过 fun_cmd 判断返回
 static MQTT_4G_PROCESS_T MQTT_4G_Pro[] = {
-    {"AT\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},                                  //
-    {"ATE0\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},                                // 关闭回显
-    {"ATI\r\n", "Revision: ", 200, 3, 1, NULL, NULL, EC200T_VER},                   // 获取版本号
-    {"AT+CPIN?\r\n", "READY", 500, 3, 1, NULL, NULL, NULL},                         // pin码是否OK                 ,  20s 重启
-    {"AT+CREG?\r\n", NULL, 500, 25, 1, NULL, MQTT_4G_Net_Status, NULL},             // 网络注册是否OK              ,  90s 重启
-    {"AT+CGREG?\r\n", NULL, 500, 25, 1, NULL, MQTT_4G_Net_Status, NULL},            // 网络注册是否OK              ,  60s 重启
-    {"AT+CCID\r\n", "CCID: ", 200, 3, 1, NULL, NULL, EC20T_CCID},                   // 获取CCID
+    {"AT\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},									//
+    {"ATE0\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},								// 关闭回显
+    {"ATI\r\n", "Revision: ", 200, 3, 1, NULL, NULL, EC200T_VER},					// 获取版本号
+    {"AT+CPIN?\r\n", "READY", 500, 3, 1, NULL, NULL, NULL},							// pin码是否OK                 ,  20s 重启
+    {"AT+CREG?\r\n", NULL, 500, 25, 1, NULL, MQTT_4G_Net_Status, NULL},				// 网络注册是否OK              ,  90s 重启
+    {"AT+CGREG?\r\n", NULL, 500, 25, 1, NULL, MQTT_4G_Net_Status, NULL},			// 网络注册是否OK              ,  60s 重启
+    {"AT+CCID\r\n", "CCID: ", 200, 3, 1, NULL, NULL, EC20T_CCID},					// 获取CCID
     {"AT+QENG=\"servingcell\"\r\n", NULL, 500, 3, 1, NULL, MQTT_4G_Get_RSSI, NULL}, // 获取信号强度
-    {"AT+CSQ\r\n", "CSQ: ", 500, 5, 1, NULL, NULL, EC20T_CSQ},                      // 获取CSQ
-    {"AT+CCLK?\r\n", "CCLK: ", 500, 3, 1, NULL, NULL, EC20T_CCLK},                  // 获取时钟
-    {"AT+QMTCFG=\"version\",0,4\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},           // 设备MQTT版本
-    {"AT+QMTCFG=\"qmtping\",0,60\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},          // 设置心跳间隔
-    {"AT+QMTCFG=\"recv/mode\",0,0,1\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},       // 设置消息上报形式
-    {NULL, "OK", 2000, 3, 1, MQTT_4G_LastWds_CMD, NULL, NULL},                      // will
-    {"AT\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},                                  // 备用
-    {NULL, NULL, 2000, 3, 1, MQTT_4G_Open_CMD, MQTT_4G_Wait_Open, NULL},            // 打开网络， "+QMTOPEN: 0,0"    +QMTSTAT: 0,1 要重新打开
-    {NULL, NULL, 2000, 3, 1, MQTT_4G_Conn_CMD, MQTT_4G_Wait_Conn, NULL},            // 连接服务器， +QMTCONN: 0,0,0
-    {NULL, NULL, 2000, 3, 0, MQTT_4G_Sub_CMD, MQTT_4G_Wait_Sub, NULL},              // 订阅
+    {"AT+CSQ\r\n", "CSQ: ", 500, 5, 1, NULL, NULL, EC20T_CSQ},						// 获取CSQ
+    {"AT+CCLK?\r\n", "CCLK: ", 500, 3, 1, NULL, NULL, EC20T_CCLK},					// 获取时钟
+    {"AT+QMTCFG=\"version\",0,4\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},			// 设备MQTT版本
+    {"AT+QMTCFG=\"qmtping\",0,60\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},			// 设置心跳间隔
+    {"AT+QMTCFG=\"recv/mode\",0,0,1\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},		// 设置消息上报形式
+    {NULL, "OK", 2000, 3, 1, MQTT_4G_LastWds_CMD, NULL, NULL},						// will
+    {"AT\r\n", "OK", 200, 3, 1, NULL, NULL, NULL},									// 备用
+    {NULL, NULL, 2000, 3, 1, MQTT_4G_Open_CMD, MQTT_4G_Wait_Open, NULL},			// 打开网络， "+QMTOPEN: 0,0"    +QMTSTAT: 0,1 要重新打开
+    {NULL, NULL, 2000, 3, 1, MQTT_4G_Conn_CMD, MQTT_4G_Wait_Conn, NULL},			// 连接服务器， +QMTCONN: 0,0,0
+    {NULL, NULL, 2000, 3, 0, MQTT_4G_Sub_CMD, MQTT_4G_Wait_Sub, NULL},				// 订阅
     {"AT+QENG=\"servingcell\"\r\n", NULL, 200, 3, 0, NULL, MQTT_4G_Get_RSSI, NULL}, // 获取信号强度
-    {NULL, NULL, 500, 1, 0, MQTT_4G_Data_CMD, MQTT_4G_Wait_Data, NULL},             // 发送实际数据
+    {NULL, NULL, 500, 1, 0, MQTT_4G_Data_CMD, MQTT_4G_Wait_Data, NULL},				// 发送实际数据
 };
 
 // 判断网络状态是否正确
@@ -332,11 +333,11 @@ void MQTT_4G_Init(void) {
 
 void MQTT_4G_Task(void) {
     char * p_star = NULL; // 开始
-    char * p_end = NULL;  // 结束
+    char * p_end = NULL;	 // 结束
     unsigned short int temp;
     unsigned short int tempLen;
 
-    if (MQTT_4G_Receive_10mS_Delay >= 4) { // 20ms check 一次
+    if (MQTT_4G_Receive_10mS_Delay >= 4 ) { // 20ms check 一次
         MQTT_4G_Receive_10mS_Delay = 0;
         // 收到数据
         if (UART0Ddata.RxLen != 0) {
@@ -356,13 +357,12 @@ void MQTT_4G_Task(void) {
             // 接收
             if (strstr((char *)MQTT_4G_ReceiveBuf, "+QMTRECV:") != NULL) {
                 EC20_Dealy_GPIO_GSM_On(100);
-                // 汇云协议
                 if ((p_star = strstr((char *)MQTT_4G_ReceiveBuf, "hy/gw/get/")) != NULL && (p_star = strstr(p_star, "\",")) != NULL) { // 收到完整的 topic
                     p_star += 2;
                     temp = atoi(p_star); // 理论数据长度
-                    if ((p_star = strchr(p_star, '"')) != NULL) {                // 数据开始
+                    if ((p_star = strchr(p_star, '"')) != NULL) {				 // 数据开始
                         p_star += 1; // 数据起始地址                     // 判断是否收完
-                        if (p_star - MQTT_4G_ReceiveBuf < MQTT_4G_ReceiveBufLen) {                                                                    // 收到了数据
+                        if (p_star - MQTT_4G_ReceiveBuf < MQTT_4G_ReceiveBufLen) {																	 // 收到了数据
                             tempLen = MQTT_4G_ReceiveBufLen - (p_star - MQTT_4G_ReceiveBuf); // 收到的数据长度
                             if (tempLen >= temp + 1) { // 数据长度足够
                                 if (*(p_star + temp) == '"') { // 数据结构正确
@@ -375,10 +375,7 @@ void MQTT_4G_Task(void) {
                             }
                         }
                     }
-                } else { // WT 协议
-                    WT_MQTT_JSON_Analysis(MQTT_4G_ReceiveBuf);
                 }
-
                 // 收到 rec 直接跳到连接模式
                 if (MQTT_4G_Process_Index != 0x55) {
                     printf("mqtt connect 1: %s\r\n", AT24CXX_Manager.NET_4G_Remote_Url);
@@ -477,7 +474,7 @@ void MQTT_4G_Task(void) {
                 EC20_Dealy_GPIO_GSM_On(0);
             } else if (MQTT_4G_Process_Index < MQTT_4G_PROCESS_MAX) {
                 if (MQTT_4G_Process_10mS_Delay <= 0) {
-                    if (MQTT_4G_Process_Repeat_Count >= MQTT_4G_Pro[MQTT_4G_Process_Index].overtime_num) {                                 // 三次失败重启模块
+                    if (MQTT_4G_Process_Repeat_Count >= MQTT_4G_Pro[MQTT_4G_Process_Index].overtime_num) {								  // 三次失败重启模块
                         MQTT_4G_Process_Index = 0xff; // 重启模块
                         EC20_Dealy_GPIO_Err_On(1000);
                     } else {
@@ -513,8 +510,8 @@ void MQTT_4G_Task(void) {
                 execute_Set_RX8025T_By_MQTT_CCLK_1Second_Count = 1;
             } else if (MQTT_4G_Heart_Inv_Delay >= MQTT_4G_HEART_INV && MQTT_4G_ReceiveBufLen == 0) {
                 MQTT_4G_Heart_Inv_Delay = 0;
-                // JSON_Send_GW_Infor(MQTT_4G_Has_RST); // 上线包数据
-                // MQTT_4G_Has_RST = 0;
+                JSON_Send_GW_Infor(MQTT_4G_Has_RST);
+                MQTT_4G_Has_RST = 0;
             } else if (MQTT_4G_Connect_Flage == 1) { // 确定连接上了
                 MQTT_4G_Connect_Task();
             }

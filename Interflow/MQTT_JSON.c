@@ -245,11 +245,11 @@ void JSON_Send_GW_Infor(bool hasRST) {
     // 版本号
     sprintf(temp_char, "V%d.%d", SOFT_VERSION / 10, SOFT_VERSION % 10);
     JSON_Send_Add_Item(&json_matching.GW_Ver, temp_char);
-    JSON_Send_Add_Item(&json_matching.has_rst, &hasRST);                // 是否重启
+    JSON_Send_Add_Item(&json_matching.has_rst, &hasRST);				// 是否重启
     JSON_Send_Add_Item(&json_matching.MBUS_mV, &Current_MBUS_MV_Value); // MBUS电压
     JSON_Send_Add_Item(&json_matching.MBUS_mA, &Current_MBUS_MA_Value); // MBUS电流
-    temp = AT24CXX_Manager.Save_Working_Mode;                           // 端口 要完善
-    JSON_Send_Add_Item(&json_matching.GW_model, &temp);                 // 网关当前开启的端口  MBUS及485区别
+    temp = AT24CXX_Manager.Save_Working_Mode;											// 端口 要完善
+    JSON_Send_Add_Item(&json_matching.GW_model, &temp);					// 网关当前开启的端口  MBUS及485区别
     temp = 0;
     temp = EEprom_Byte1Read(EEPROM_MAIN_METER_TOTAL_ADDR);
     JSON_Send_Add_Item(&json_matching.main_meter_total, &temp);
@@ -304,7 +304,7 @@ static void JSON_Send_Read_Main_Meter_Id(unsigned char id) {
             Main_MeterId[i].meterIds[j] = EEprom_Byte1Read(EEPROM_MAIN_METER_START_ADDR + i * 60 + j);
     }
     sprintf(temp_char, "%01x%02x%02x%02x%02x%02x%02x", Main_MeterId[0].meterIds[0], Main_MeterId[0].meterIds[1], Main_MeterId[0].meterIds[2], Main_MeterId[0].meterIds[3], Main_MeterId[0].meterIds[4], Main_MeterId[0].meterIds[5], Main_MeterId[0].meterIds[6]);
-    if ((Main_MeterId[0].meterIds[0] == 0x00) || (Main_MeterId[0].meterIds[0] == 0xFF)) {   // 无仪表号码
+    if ((Main_MeterId[0].meterIds[0] == 0x00) || (Main_MeterId[0].meterIds[0] == 0xFF)) {								// 无仪表号码
         JSON_Send_Add_Stat(id, 31); // 失败
     } else {
         JSON_Send_Add_Item_Func(&json_matching.main_meter_id, temp_char);
@@ -343,7 +343,7 @@ static void JSON_Send_Read_Copy_Meter_Id(unsigned char id, unsigned char num) {
             Copy_MeterId[i].meterIds[j] = EEprom_Byte1Read(EEPROM_COPY_METER_START_ADDR + (num - 1) * 1200 + i * 60 + j);
     }
     sprintf(temp_char, "%01x%02x%02x%02x%02x%02x%02x", Copy_MeterId[0].meterIds[0], Copy_MeterId[0].meterIds[1], Copy_MeterId[0].meterIds[2], Copy_MeterId[0].meterIds[3], Copy_MeterId[0].meterIds[4], Copy_MeterId[0].meterIds[5], Copy_MeterId[0].meterIds[6]);
-    if ((Copy_MeterId[0].meterIds[0] == 0x00) || (Copy_MeterId[0].meterIds[0] == 0xFF)) {   // 无仪表号码
+    if ((Copy_MeterId[0].meterIds[0] == 0x00) || (Copy_MeterId[0].meterIds[0] == 0xFF)) {								// 无仪表号码
         JSON_Send_Add_Stat(id, 41); // 失败
     } else {
         JSON_Send_Add_Item_Func(&json_matching.copy_meter_id, temp_char);
@@ -620,8 +620,8 @@ int MQTT_JSON_Analysis(char * data) {
             } else {
                 int Len = JSON_GW_SIZE;
                 JSON_Send_Add_Stat(id, 2);
-                #warning "测试"
-                    copyString((char *)change_char, (char *)p, ARR_SIZE(change_char), Len);
+#warning "测试"
+                copyString((char *)change_char, (char *)p, ARR_SIZE(change_char), Len);
                 swapStr((char *)change_char, Len);
                 if ((Len % 2) != 0) {
                     change_char[strlen((char *)change_char)] = '0';
@@ -682,9 +682,6 @@ int MQTT_JSON_Analysis(char * data) {
                     imm_Read.immediately_Reading_Current_Count = 0;
                     imm_Read.immediately_TX_Len = strlen(p);
                     char * P_end = myStrstr(p, "\"", imm_Read.immediately_TX_Len);
-                    if (P_end == NULL) {
-                        return 1;
-                    }
                     imm_Read.immediately_TX_Len = (P_end - p) / 2;
                     ASCIIToHEX2((char *)p, len, (char *)imm_Read.immediately_TXBuffer, imm_Read.immediately_TX_Len);
                     if ((JSON_Find_Int(p, &json_matching.transparent_count, &temp1)) == NULL)
@@ -756,6 +753,5 @@ int MQTT_JSON_Analysis(char * data) {
         default:
             break;
     }
-    WT_MQTT_FLAG = 0;   // 改回 WT 的指令
     return 1;
 }

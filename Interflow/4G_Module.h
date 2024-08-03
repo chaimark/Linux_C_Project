@@ -10,17 +10,17 @@
 #include "Gpio.h"
 #include "main.h"
 // 超时处理
-#define MQTT_4G_REBOOT_INV_MAX 360000     // 1h   最大重启间隔
-#define MQTT_4G_READ_ISSI_INV 360000      // 1h   读取信号强度间隔
-#define MQTT_4G_READ_CCLK_INV 12 * 360000 // 12h   读取信号强度间隔
-#define MQTT_4G_HEART_INV 360000          // 60s  心跳间隔 1h
+#define MQTT_4G_REBOOT_INV_MAX    360000      // 1h   最大重启间隔
+#define MQTT_4G_READ_ISSI_INV     360000      // 1h   读取信号强度间隔 
+#define MQTT_4G_READ_CCLK_INV     12*360000   // 12h   读取信号强度间隔 
+#define MQTT_4G_HEART_INV         360000      // 60s  心跳间隔 1h
 // 流程处理
-#define MQTT_4G_PROCESS_MAX sizeof(MQTT_4G_Pro) / sizeof(MQTT_4G_PROCESS_T) // 总条数
-#define MQTT_4G_CONNECT_INDEX 17                                            // 连接成功
-#define MQTT_4G_READ_RSSI_INDEX 18                                          // 读信号强度 索引位置
-#define MQTT_4G_READ_CCLK_INDEX 9                                           // 读系统时钟 索引位置
-#define MQTT_4G_Send_INDEX 19                                               // 发送数据等待索引位置
-#define OFFSET_MAX_SIZE 500
+#define MQTT_4G_PROCESS_MAX  sizeof(MQTT_4G_Pro) / sizeof(MQTT_4G_PROCESS_T) // 总条数
+#define MQTT_4G_CONNECT_INDEX     17     // 连接成功
+#define MQTT_4G_READ_RSSI_INDEX   18     // 读信号强度 索引位置 
+#define MQTT_4G_READ_CCLK_INDEX   9      // 读系统时钟 索引位置 
+#define MQTT_4G_Send_INDEX        19     // 发送数据等待索引位置
+#define OFFSET_MAX_SIZE  500
 
 extern char EC200T_VER[30];
 extern char EC20T_CCID[30];

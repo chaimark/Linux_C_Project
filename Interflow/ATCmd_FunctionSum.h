@@ -30,8 +30,8 @@ typedef enum _receiveFun {                              // 发送AT指令时调�
 typedef struct _NetDevATCmdData {                         // 成员
     int8_t CmdID;         // 指令ID
     int8_t Next_CmdID;    // 下一条指令ID
-    char * ATCmd;          // AT指令
-    char * SucessStr;      // 成功返回的字符串
+    char * ATCmd;         // AT指令
+    char * SucessStr;     // 成功返回的字符串
     bool RunFlag;         // 是否执行当前指令
     uint8_t CmsResCount;  // 回复查询次数限制
     uint8_t CmdSendCount; // 指令发送次数限制
