@@ -4,7 +4,7 @@ int UART0_BAND = 115200;
 unsigned int Current_MBUS_MV_Value = 0;
 unsigned int Current_MBUS_MA_Value = 0;
 const unsigned char HasRX8025T = 0;
-const unsigned char SOFT_VERSION = 11;  // 11:V1.1
+const unsigned char SOFT_VERSION = 12;  // 12:V1.2
 
 unsigned int   MBUS_UART1_BaudRate = 2400;
 unsigned char  MBUS_UART1_Parity = 2;

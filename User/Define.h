@@ -2,7 +2,7 @@
 #define __Define_H__
 #include "main.h"
 
-extern const unsigned char SOFT_VERSION; // 10:V1.0
+extern const unsigned char SOFT_VERSION; // 12:V1.2
 #define SHOW_EC20_PROGRAMMR_HY "HuiYun EC20 Programme  \r\n"
 
 #define SHOW_UP_MODE_EC20 "UP_EC20  ON\r\n"

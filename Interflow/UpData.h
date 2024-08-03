@@ -3,7 +3,6 @@
 
 #include "main.h"
 
-
 #define PAGE_OFFSET 9
 #define PAGE_SIZE 512
 #define UpData_Line_MAX 32
@@ -26,6 +25,6 @@
 #define UPDATA_MCU_BASE 0
 #define UPDATA_MCU_OFFSET 0x4000
 
-extern int UpData_Receive_Hex(unsigned short int num_row, unsigned char* buf, unsigned short int len);
+extern int UpData_Receive_Hex(unsigned short int num_row, unsigned char * buf, unsigned short int len);
 
 #endif

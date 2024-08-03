@@ -1,5 +1,3 @@
-#include "main.h"
-#include <stdbool.h>
 #include "Uart.h"
 #include "Define.h"
 #include "AT24C0256.h"
@@ -8,14 +6,15 @@
 #include "TimerCopyReading.h"
 #include "RTC.h"
 #include "LPUart.h"
+#include "main.h"
+#include <stdbool.h>
 #include "WIFI_Interaction.h"
 
 // 实现 printf
 #pragma import(__use_no_semihosting)
 struct __FILE {
     int handle;
-};
-FILE __stdout;
+}__stdout;
 
 void _sys_exit(int x) {
     x = x;
@@ -26,7 +25,6 @@ int fputc(int ch, FILE * f) {
     while (!(CONSOLE_UART->ISR & 0x01));
     return (ch);
 }
-
 
 UARTOpStruct UART0Ddata, UART1Ddata, UART4Ddata, UART5Ddata;
 
@@ -598,7 +596,7 @@ void UART5_IRQHandler(void) {
         tmp = FL_UART_ReadRXBuff(UART5);
         uart_receive_u8(&UART5Ddata, tmp);
     }
-    if (IsAcceptWIFIData((char *)UART5Ddata.RxBuf, (int)UART5Ddata.RxLen)) {
+    if(IsAcceptWIFIData((char *)UART5Ddata.RxBuf, (int)UART5Ddata.RxLen)) {
         if (WIFI_TASK()) {
             Clear_UART5_Data();
         }

@@ -198,9 +198,9 @@ void MOTT_Net_Task(void) {
 
 void MQTT_NET_10mS_Timers_Add(void) {
     if ((Now_NetDevParameter.LineCheckTime = (Now_NetDevParameter.LineCheckTime > 0 ? (Now_NetDevParameter.LineCheckTime - 1) : 0)) == 0) {
-        Now_NetDevParameter.LineCheckTime = 6000;       // (LineCheckTime/100) 秒后，判断你是否处于连接状态
-        Now_NetDevParameter.CheckOnlineFlag = true;     // 检查网络在线标记
-        Now_NetDevParameter.CheckTCPLinkFlag = true;    // 检查TCP连接标记
+        Now_NetDevParameter.LineCheckTime = 6000;    // (LineCheckTime/100) 秒后，判断你是否处于连接状态
+        Now_NetDevParameter.CheckOnlineFlag = true;  // 检查网络在线标记
+        Now_NetDevParameter.CheckTCPLinkFlag = true; // 检查TCP连接标记
     }
     // 每 10ms 计数一次
     ((Now_NetDevParameter.MQTT_NET_Receive_checkTime != 0) ? (Now_NetDevParameter.MQTT_NET_Receive_checkTime--) : 0);

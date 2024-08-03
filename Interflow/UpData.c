@@ -4,8 +4,8 @@
 #include "NumberBaseLib.h"
 
 typedef struct UpData_Param_S {
-    unsigned int sign;		// 标志位
-    unsigned int pageNum;	// 大小
+    unsigned int sign;      // 标志位
+    unsigned int pageNum;   // 大小
     unsigned char sum[128]; // 校验
 } UpData_Param_T;
 
@@ -18,7 +18,7 @@ static unsigned short int UpData_Page_Len;
 static unsigned int UpData_Page_Num;
 static unsigned char UpData_Buff[PAGE_SIZE]; // 临时存储
 static unsigned short int UpData_Bufff_Len;
-static unsigned int UpData_AddrBase = 0xaa;		 // 基地址
+static unsigned int UpData_AddrBase = 0xaa;      // 基地址
 static unsigned short int UpData_AddrNow = 0xaa; // 当前地址
 
 static int Falsh_Check_Page(unsigned int addr, unsigned int * buf) {
@@ -126,7 +126,7 @@ int UpData_Receive_Hex(unsigned short int num_row, unsigned char * buf, unsigned
                 if (addr > UpData_AddrNow) {
                     printf("updata addr err\r\n");
                     return -2;
-                } else if (addr < UpData_AddrNow){
+                } else if (addr < UpData_AddrNow) {
                     break;
                 } else {
                     memcpy(UpData_Buff + UpData_Bufff_Len, UpData_Line + 4, UpData_Line[0]);

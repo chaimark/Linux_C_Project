@@ -27,6 +27,8 @@
  * @param  void
  * @retval None
  */
+
+ 
 void MF_GPIO_Init(void) {
     FL_GPIO_InitTypeDef GPIO_InitStruct;
 
@@ -728,7 +730,7 @@ void MF_Clock_Init(void) {
     FL_RCC_RCHF_SetFrequency(FL_RCC_RCHF_FREQUENCY_8MHZ);
     FL_RCC_RCHF_Enable();
 
-   /* Initial PLL */
+    /* Initial PLL */
     FL_RCC_PLL_Disable();
     FL_RCC_PLL_SetClockSource(FL_RCC_PLL_CLK_SOURCE_RCHF);
     FL_RCC_PLL_SetPrescaler(FL_RCC_PLL_PSC_DIV8);
