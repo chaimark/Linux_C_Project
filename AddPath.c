@@ -3,7 +3,10 @@
 #include <string.h>
 #include <unistd.h>
 
-void add_to_path(const char * folder_path) {
+void add_to_path(const char * folder_path, int pathAddi) {
+    if (pathAddi == 2) {    // del now path
+
+    }
     // 检查文件夹路径是否为空
     if (folder_path == NULL || folder_path[0] == '\0') {
         printf("文件夹路径不能为空。\n");
@@ -44,12 +47,14 @@ void add_to_path(const char * folder_path) {
 }
 
 int main(int argc, char * argv[]) {
-    if (argc > 2) {
+    if (argc > 3) {
         printf("使用方法: %s <文件夹路径>\n", argv[0]);
         return 1;
     }
-
-    const char * folder_path = argv[1];
-    add_to_path(folder_path);
+    const char * folder_path = NULL;
+    int pathAddi = 0;
+    pathAddi = ((strstr(argv[1], "-d") != NULL) ? 2 : 1);
+    folder_path = argv[pathAddi];
+    add_to_path(folder_path, pathAddi);
     return 0;
 }
