@@ -33,7 +33,8 @@ void add_to_path(CmdData UserCmdData) {
     setenv("PATH", UserCmdData.folderPath, 1);  // 更新当前进程的PATH环境变量
     printf("文件夹路径 %s 已成功添加到PATH中\n并更新了bashrc文件。\n", UserCmdData.folderPath);
     char cmd[512] = {0};
-    snprintf(cmd, sizeof(cmd), "source %s", &UserCmdData.bashrcPath[0]);
+    strncpy(cmd, "source ", sizeof(cmd) - 1);
+    strncat(cmd, UserCmdData.bashrcPath, sizeof(cmd) - strlen(cmd) - 1);
     system(cmd);
 }
 
@@ -55,7 +56,8 @@ int main(int argc, char * argv[]){
     snprintf(UserCmdData.bashrcPath, sizeof(UserCmdData.bashrcPath), "%s/.bashrc", home_dir);
     if ((strstr(argv[1], "-show") != NULL)) {
         char cmd[512] = {0};
-        snprintf(cmd, sizeof(cmd), "cat %s", &UserCmdData.bashrcPath[0]);   
+        strncpy(cmd, "source ", sizeof(cmd) - 1);
+        strncat(cmd, UserCmdData.bashrcPath, sizeof(cmd) - strlen(cmd) - 1);
         system(cmd);
         return 1;
     }
