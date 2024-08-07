@@ -9,7 +9,6 @@ void del_to_path(CmdData UserCmdData) {
     char FindPath[512];
     sprintf(FindPath, "export PATH=$PATH:%s", UserCmdData.folderPath); // 设置要排除的 folderPath 文件中
 
-    system("cp /home/leige/Public/bashrc /tmp/bashrcTemp"); // 复制一份模板
     // bashrcMather 写入 tmp/bashrcTemp
     FILE * bashrcMatherFp = fopen("/tmp/bashrcTemp", "w");
     if (bashrcMatherFp == NULL) {
@@ -24,12 +23,9 @@ void del_to_path(CmdData UserCmdData) {
         printf("无法打开 bashrcTemp 文件。\n");
         return;
     }
-    system("cat ~/.bashrc | grep ^export | awk '{print $0}' > /tmp/exportTxt"); // 读取 bashrc 文件的 export PATH 行
-    FILE * exportTxt = fopen("/tmp/exportTxt", "r");   // 打开 /tmp/exportTxt 文件
-    if (exportTxt == NULL) {
-        printf("无法打开 exportTxt 文件。\n");
-        return;
-    }
+
+    // 读取 bashrc 文件的 export PATH 行
+    FILE * exportTxt = popen("cat ~/.bashrc | grep ^export | awk '{print $0}'", "r"); 
     int c;
     char LineData[512] = {0};
     int LineDataLen = 0;
@@ -50,7 +46,8 @@ void del_to_path(CmdData UserCmdData) {
             LineData[LineDataLen++] = c;    // 复制字符到 LineData 数组中
         }
     }
-    fclose(bashrcTemp);// 关闭 /tmp/bashrc 文件
+    pclose(exportTxt);  // 关闭 exportTxt 文件
+    fclose(bashrcTemp); // 关闭 /tmp/bashrc 文件
     system("cp /tmp/bashrcTemp ~/.bashrc");
     system("rm -f /tmp/bashrc");// 删除 /tmp/bashrc 文件
 
